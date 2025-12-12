@@ -36,6 +36,7 @@ from datetime import datetime
 from typing import Dict, List, Optional, Set
 
 import telebot
+import threading
 from telebot import types
 
 # ===================== Налаштування бота =====================
@@ -46,6 +47,9 @@ TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "YOUR_TELEGRAM_BOT_TOKEN_HERE")
 ADMIN_IDS: Set[int] = {
     880923657, # @lfmane TELEGRAM
 }
+
+app = Flask(__name__)
+
 
 if TOKEN == "YOUR_TELEGRAM_BOT_TOKEN_HERE":
     # Для зручності в навчальному режимі можна просто залишити попередження
@@ -755,8 +759,19 @@ def seed_catalog() -> None:
 
 
 # ===================== Точка входу =====================
+@app.route("/")
+def index():
+    return "Bot is running"
 
-if __name__ == "__main__":
+def run_bot():
     seed_catalog()
     logger.info("Bot is starting...")
     bot.infinity_polling(skip_pending=True)
+
+if __name__ == "__main__":
+    t = threading.Thread(target=run_bot)
+    t.daemon = True
+    t.start()
+
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
